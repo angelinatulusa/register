@@ -17,10 +17,12 @@ if(isset($_POST['submit'])){
     $tootaja = $xmlDoc->createElement("tootaja");
     $nimi = $xmlDoc->createElement("nimi", $_POST['nimi']);
     $isikukood = $xmlDoc->createElement("isikukood", $_POST['isikukood']);
+    $valik = $xmlDoc->createElement("valik", $_POST['valik']);
 
     $tootaja->appendChild($nimi);
     $tootaja->appendChild($isikukood);
     $aeg->appendChild($tootaja);
+    $aeg->appendChild($valik);
     $xml_toode->appendChild($aeg);
 
     // Добавляем <date> в корневой элемент
@@ -41,14 +43,88 @@ $dates = simplexml_load_file('tootajad.xml');
     <title>Toote lisamine</title>
 </head>
 <style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #fff2e6; /* Более светлый фон */
+        margin: 0;
+        padding: 0;
+    }
+
+    h1 {
+        color: #cc6600;
+        text-align: center;
+        padding: 10px;
+    }
+
+    h2 {
+        margin-top: 20px;
+        font-size: 18px;
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 80%;
+        margin: 20px auto;
+        background-color: #fff;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    }
+
     th, td {
         border: 1px solid #dddddd;
         text-align: left;
         padding: 8px;
     }
+
+    th {
+        background-color: #b35900;
+        color: #fff;
+    }
+
+    td:last-child {
+        text-align: center;
+    }
+
+    input[type="text"], input[type="time"] {
+        width: 100%;
+        padding: 5px;
+        margin: 5px 0;
+    }
+
+    select {
+        width: 100%;
+        padding: 5px;
+        margin: 5px 0;
+    }
+
+    input[type="submit"] {
+        background-color: #b35900;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 10px;
+    }
+
+    input[type="submit"]:hover {
+        background-color: #0056b3;
+    }
+
+    button {
+        background-color: #dc3545;
+        color: #fff;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 10px;
+    }
+
+    button:hover {
+        background-color: #bb2d3b;
+    }
 </style>
+
 <body>
-<h2>Toote sisestamine</h2>
+<h1>Firma töötajate register</h1>
 <form action="" method="post" name="vorm1">
     <table>
         <tr>
@@ -64,6 +140,15 @@ $dates = simplexml_load_file('tootajad.xml');
             <td><input type="time" name="aeg" id="aeg"></td>
         </tr>
         <tr>
+            <td><label for="valik">Kas olete just saabunud või juba lahkute?</label></td>
+            <td>
+                <select name="valik" id="valik">
+                    <option value="algus">just saabun</option>
+                    <option value="lõpp">juba lahkun</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
             <td><input type="submit" name="submit" id="submit" value="Sisesta"></td>
             <td></td>
         </tr>
@@ -75,14 +160,15 @@ $dates = simplexml_load_file('tootajad.xml');
             <th>Nimi</th>
             <th>Isikukood</th>
             <th>Aeg</th>
-            <th>Delete</th>
+            <th>Algus/lõpp</th>
         </tr>
         <?php
         foreach ($dates->date as $date) {
             echo "<tr>";
             echo "<td>{$date->aeg->tootaja->nimi}</td>";
             echo "<td>{$date->aeg->tootaja->isikukood}</td>";
-            echo "<td>{$date->aeg['aeg']}</td>";
+            echo "<td>{$date->aeg}</td>";
+            echo "<td>{$date->aeg->valik}</td>";
             echo "<td><button onclick='deleteRow(this)'>Delete(nado dodelatj stobi rabotala)</button></td>";
                 echo "</tr>";
             }
