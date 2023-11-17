@@ -56,14 +56,9 @@ $dates = simplexml_load_file('tootajad.xml');
         padding: 10px;
     }
 
-    h2 {
-        margin-top: 20px;
-        font-size: 18px;
-    }
-
     table {
         border-collapse: collapse;
-        width: 80%;
+        width: 50%;
         margin: 20px auto;
         background-color: #fff;
         box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
@@ -71,7 +66,6 @@ $dates = simplexml_load_file('tootajad.xml');
 
     th, td {
         border: 1px solid #dddddd;
-        text-align: left;
         padding: 8px;
     }
 
@@ -154,7 +148,7 @@ $dates = simplexml_load_file('tootajad.xml');
         </tr>
     </table>
 </form>
-<h2>Tootajad</h2>
+<h1>Tootajad</h1>
     <table>
         <tr>
             <th>Nimi</th>
