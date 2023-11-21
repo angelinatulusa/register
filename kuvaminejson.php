@@ -1,88 +1,69 @@
-<?php if (isset($_GET['code'])) { die(highlight_file(__FILE__, 1)); } ?>
 <?php
-$ids = simplexml_load_file('tootajad.xml');
+
+$filename = 'tootajad.json';
+$ids = file_exists($filename) ? json_decode(file_get_contents($filename), true) : [];
 
 $maksId = 0;
-foreach ($ids->id as $id) {
+
+foreach ($ids as $id) {
     $praeguId = (int) $id['id'];
     if ($praeguId > $maksId) {
         $maksId = $praeguId;
     }
 }
+
 $uusId = $maksId + 1;
+
 if (isset($_POST['submit'])) {
-    $xmlDoc = new DOMDocument("1.0", "UTF-8");
-    $xmlDoc->preserveWhiteSpace = false;
+    $uusToode = [
+        'id' => $uusId,
+        'aeg' => $_POST['aeg'],
+        'tootaja' => [
+            'nimi' => $_POST['nimi'],
+            'isikukood' => $_POST['isikukood'],
+        ],
+        'valik' => $_POST['valik'],
+    ];
 
-    if (file_exists('tootajad.xml')) {
-        $xmlDoc->load('tootajad.xml');
-    }
+    $ids[] = $uusToode;
 
-    $xml_toode = $xmlDoc->createElement("id");
+    file_put_contents($filename, json_encode($ids, JSON_PRETTY_PRINT));
 
-    $aeg = $xmlDoc->createElement("aeg", $_POST['aeg']);
-    $tootaja = $xmlDoc->createElement("tootaja");
-    $nimi = $xmlDoc->createElement("nimi", $_POST['nimi']);
-    $isikukood = $xmlDoc->createElement("isikukood", $_POST['isikukood']);
-    $valik = $xmlDoc->createElement("valik", $_POST['valik']);
-
-    $tootaja->appendChild($nimi);
-    $tootaja->appendChild($isikukood);
-    $aeg->appendChild($tootaja);
-    $aeg->appendChild($valik);
-    $xml_toode->appendChild($aeg);
-
-    // Установите новый ID
-    $xml_toode->setAttribute('id', $uusId);
-
-    $root = $xmlDoc->documentElement;
-    $root->appendChild($xml_toode);
-
-    $xmlDoc->formatOutput = true;
-    $xmlDoc->save('tootajad.xml');
     header("Location: {$_SERVER['REQUEST_URI']}");
     exit;
 }
 
-function Kustuta($xml, $id) {
-    $elementsToDelete = [];
+function Kustuta($data, $id) {
+    $filteredData = array_filter($data, function ($item) use ($id) {
+        return (int)$item['id'] !== (int)$id;
+    });
 
-    foreach ($xml->id as $xmlId) {
-        if ((int)$xmlId['id'] === (int)$id) {
-            $elementsToDelete[] = $xmlId;
-        }
-    }
-
-    foreach ($elementsToDelete as $element) {
-        $node = dom_import_simplexml($element);
-        $node->parentNode->removeChild($node);
-    }
-
-    $xml->asXML('tootajad.xml');
+    file_put_contents('tootajad.json', json_encode(array_values($filteredData), JSON_PRETTY_PRINT));
 }
 
 if (isset($_POST['delete'])) {
-    $isikukoodToDelete = $_POST['delete'];
-    Kustuta($ids, $isikukoodToDelete);
-    $ids = simplexml_load_file('tootajad.xml');
+    $idToDelete = $_POST['delete'];
+    Kustuta($ids, $idToDelete);
+    $ids = json_decode(file_get_contents($filename), true);
 }
-function OtsiIsikukoodiga($xml, $isikukood) {
-    $vastused = array();
 
-    foreach ($xml->id as $id) {
-        $InimeneIsikukood = (string) $id->aeg->tootaja->isikukood;
-        if ((string) $isikukood == $InimeneIsikukood) {
-            $vastus = array(
-                'nimi' => (string) $id->aeg->tootaja->nimi,
-                'isikukood' => $InimeneIsikukood,
-                'aeg' => (string) $id->aeg,
-                'valik' => (string) $id->aeg->valik,
-            );
-            $vastused[] = $vastus;
+function OtsiIsikukoodiga($data, $isikukood) {
+    $results = [];
+
+    foreach ($data as $item) {
+        $employeeIsikukood = $item['tootaja']['isikukood'];
+        if ($isikukood == $employeeIsikukood) {
+            $result = [
+                'nimi' => $item['tootaja']['nimi'],
+                'isikukood' => $employeeIsikukood,
+                'aeg' => $item['aeg'],
+                'valik' => is_array($item['valik']) ? implode(', ', $item['valik']) : $item['valik'],
+            ];
+            $results[] = $result;
         }
     }
 
-    return $vastused;
+    return $results;
 }
 ?>
 <!DOCTYPE html>
@@ -95,6 +76,7 @@ function OtsiIsikukoodiga($xml, $isikukood) {
     <title>Töötajate register</title>
 </head>
 
+<body>
 <h1>Firma töötajate register</h1>
 <form action="" method="post" name="vorm1">
     <table>
@@ -134,13 +116,13 @@ function OtsiIsikukoodiga($xml, $isikukood) {
         <th>Algus/lõpp</th>
     </tr>
     <?php
-    foreach ($ids->id as $id) {
+    foreach ($ids as $toode) {
         echo "<tr>";
-        echo "<td>{$id->aeg->tootaja->nimi}</td>";
-        echo "<td>{$id->aeg->tootaja->isikukood}</td>";
-        echo "<td>{$id->aeg}</td>";
-        echo "<td>{$id->aeg->valik}</td>";
-        echo "<td><form action='' method='post'><input type='hidden' name='delete' value='{$id['id']}'><button type='submit'>Kustuta</button></form></td>";
+        echo "<td>{$toode['tootaja']['nimi']}</td>";
+        echo "<td>{$toode['tootaja']['isikukood']}</td>";
+        echo "<td>{$toode['aeg']}</td>";
+        echo "<td>{$toode['valik']}</td>";
+        echo "<td><form action='' method='post'><input type='hidden' name='delete' value='{$toode['id']}'><button type='submit'>Kustuta</button></form></td>";
         echo "</tr>";
     }
     ?>
@@ -164,7 +146,6 @@ $otsiVastused = OtsiIsikukoodiga($ids, $otsitavIsikukood);
         <th>Algus/lõpp</th>
     </tr>
     <?php
-    //Otsingutulemuste kuvamine
     foreach ($otsiVastused as $vastus) {
         echo "<tr>";
         echo "<td>{$vastus['nimi']}</td>";
@@ -176,8 +157,8 @@ $otsiVastused = OtsiIsikukoodiga($ids, $otsitavIsikukood);
     }
     ?>
 </table>
-<a id="JSON" href="tootajad.xml">XML fail</a>
+<a id="JSON" href="tootajad.json">JSON fail</a>
 </br>
 <a id="XML" href="https://tulusa21.thkit.ee/register/kuvaminejson.php">xml</a>
 </body>
-</html>
+</html
