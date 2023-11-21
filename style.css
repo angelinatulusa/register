@@ -1,0 +1,100 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #fff2e6;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    color: #cc6600;
+    text-align: center;
+    padding: 10px;
+}
+
+table {
+    border-collapse: collapse;
+    width: 50%;
+    margin: 20px auto;
+    background-color: #fff;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+th, td {
+    border: 1px solid #dddddd;
+    padding: 8px;
+}
+
+th {
+    background-color: #b35900;
+    color: #fff;
+}
+
+td:last-child {
+    text-align: center;
+}
+
+input[type="text"], input[type="time"] {
+    width: calc(100% - 10px);
+    padding: 5px;
+    margin: 5px 0;
+    box-sizing: border-box;
+}
+
+select {
+    width: 100%;
+    padding: 5px;
+    margin: 5px 0;
+}
+
+input[type="submit"] {
+    background-color: #b35900;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 10px;
+}
+
+input[type="submit"]:hover {
+    background-color: #9f4f00;
+}
+
+button {
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 10px;
+}
+
+button:hover {
+    background-color: #bb2d3b;
+}
+form {
+    margin: 20px auto;
+    text-align: center;
+}
+
+label {
+    margin-right: 10px;
+}
+
+#search {
+    width: calc(100% - 10px);
+    padding: 5px;
+    margin: 5px 0;
+    box-sizing: border-box;
+    width: 40%;
+}
+
+input[type="submit"] {
+    width: 10%;
+    box-sizing: border-box;
+    padding: 10px 0;
+    background-color: #b35900;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+}

@@ -1,18 +1,15 @@
-<?php if (isset($_GET['code']))  { die(highlight_file(__FILE__, 1));}?>
+<?php if (isset($_GET['code'])) { die(highlight_file(__FILE__, 1)); } ?>
 <?php
-if(isset($_POST['submit'])){
-    // Создаем или загружаем существующий XML-документ
-    $xmlDoc = new DOMDocument("1.0","UTF-8");
+if (isset($_POST['submit'])) {
+    $xmlDoc = new DOMDocument("1.0", "UTF-8");
     $xmlDoc->preserveWhiteSpace = false;
 
     if (file_exists('tootajad.xml')) {
         $xmlDoc->load('tootajad.xml');
     }
 
-    // Создаем новый элемент <date>
     $xml_toode = $xmlDoc->createElement("date");
 
-    // Создаем элементы для данных формы и добавляем их в <date>
     $aeg = $xmlDoc->createElement("aeg", $_POST['aeg']);
     $tootaja = $xmlDoc->createElement("tootaja");
     $nimi = $xmlDoc->createElement("nimi", $_POST['nimi']);
@@ -25,99 +22,65 @@ if(isset($_POST['submit'])){
     $aeg->appendChild($valik);
     $xml_toode->appendChild($aeg);
 
-    // Добавляем <date> в корневой элемент
     $root = $xmlDoc->documentElement;
     $root->appendChild($xml_toode);
 
-    // Сохраняем XML-документ
     $xmlDoc->formatOutput = true;
     $xmlDoc->save('tootajad.xml');
 }
 $dates = simplexml_load_file('tootajad.xml');
+
+function Kustuta($xml, $isikukood) {
+    $elementsToDelete = [];
+
+    foreach ($xml->date as $date) {
+        if ((string)$date->aeg->tootaja->isikukood === $isikukood) {
+            $elementsToDelete[] = $date;
+        }
+    }
+
+    foreach ($elementsToDelete as $element) {
+        $node = dom_import_simplexml($element);
+        $node->parentNode->removeChild($node);
+    }
+
+    $xml->asXML('tootajad.xml');
+}
+
+if (isset($_POST['delete'])) {
+    $isikukoodToDelete = $_POST['delete'];
+    Kustuta($dates, $isikukoodToDelete);
+    $dates = simplexml_load_file('tootajad.xml');
+}
+function OtsiIsikukoodiga($xml, $isikukood) {
+    $vastused = array();
+
+    foreach ($xml->date as $date) {
+        $InimeneIsikukood = (string) $date->aeg->tootaja->isikukood;
+        if ((string) $isikukood == $InimeneIsikukood) {
+            $vastus = array(
+                'nimi' => (string) $date->aeg->tootaja->nimi,
+                'isikukood' => $InimeneIsikukood,
+                'aeg' => (string) $date->aeg,
+                'valik' => (string) $date->aeg->valik,
+            );
+            $vastused[] = $vastus;
+        }
+    }
+
+    return $vastused;
+}
 ?>
 <!DOCTYPE html>
 <html lang="et">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Toote lisamine</title>
+    <link rel="stylesheet" href="style.css">
+    <title>Töötajate register</title>
 </head>
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #fff2e6; /* Более светлый фон */
-        margin: 0;
-        padding: 0;
-    }
 
-    h1 {
-        color: #cc6600;
-        text-align: center;
-        padding: 10px;
-    }
-
-    table {
-        border-collapse: collapse;
-        width: 50%;
-        margin: 20px auto;
-        background-color: #fff;
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-    }
-
-    th, td {
-        border: 1px solid #dddddd;
-        padding: 8px;
-    }
-
-    th {
-        background-color: #b35900;
-        color: #fff;
-    }
-
-    td:last-child {
-        text-align: center;
-    }
-
-    input[type="text"], input[type="time"] {
-        width: 100%;
-        padding: 5px;
-        margin: 5px 0;
-    }
-
-    select {
-        width: 100%;
-        padding: 5px;
-        margin: 5px 0;
-    }
-
-    input[type="submit"] {
-        background-color: #b35900;
-        color: #fff;
-        border: none;
-        padding: 10px 20px;
-        cursor: pointer;
-        border-radius: 10px;
-    }
-
-    input[type="submit"]:hover {
-        background-color: #0056b3;
-    }
-
-    button {
-        background-color: #dc3545;
-        color: #fff;
-        border: none;
-        padding: 5px 10px;
-        cursor: pointer;
-        border-radius: 10px;
-    }
-
-    button:hover {
-        background-color: #bb2d3b;
-    }
-</style>
-
-<body>
 <h1>Firma töötajate register</h1>
 <form action="" method="post" name="vorm1">
     <table>
@@ -149,6 +112,37 @@ $dates = simplexml_load_file('tootajad.xml');
     </table>
 </form>
 <h1>Tootajad</h1>
+<table>
+    <tr>
+        <th>Nimi</th>
+        <th>Isikukood</th>
+        <th>Aeg</th>
+        <th>Algus/lõpp</th>
+        <th>Action</th>
+    </tr>
+    <?php
+    foreach ($dates->date as $date) {
+        echo "<tr>";
+        echo "<td>{$date->aeg->tootaja->nimi}</td>";
+        echo "<td>{$date->aeg->tootaja->isikukood}</td>";
+        echo "<td>{$date->aeg}</td>";
+        echo "<td>{$date->aeg->valik}</td>";
+        echo "<td><form action='' method='post'><input type='hidden' name='delete' value='{$date->aeg->tootaja->isikukood}'><button type='submit'>Delete</button></form></td>";
+        echo "</tr>";
+    }
+    ?>
+</table>
+<form action="" method="post">
+    <h1>Isiku otsing isikukoodi järgi:</h1>
+    <input type="text" name="search" id="search" maxlength="5" oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+    <input type="submit" value="Otsi">
+</form>
+<?php
+if (isset($_POST['search'])) {
+    $otsitavIsikukood = $_POST['search'];
+    $otsiVastused = OtsiIsikukoodiga($dates, $otsitavIsikukood);
+
+?>
     <table>
         <tr>
             <th>Nimi</th>
@@ -156,17 +150,19 @@ $dates = simplexml_load_file('tootajad.xml');
             <th>Aeg</th>
             <th>Algus/lõpp</th>
         </tr>
-        <?php
-        foreach ($dates->date as $date) {
-            echo "<tr>";
-            echo "<td>{$date->aeg->tootaja->nimi}</td>";
-            echo "<td>{$date->aeg->tootaja->isikukood}</td>";
-            echo "<td>{$date->aeg}</td>";
-            echo "<td>{$date->aeg->valik}</td>";
-            echo "<td><button onclick='deleteRow(this)'>Delete(nado dodelatj stobi rabotala)</button></td>";
-                echo "</tr>";
-            }
-        ?>
+    <?php
+    //Otsingutulemuste kuvamine
+    foreach ($otsiVastused as $vastus) {
+        echo "<tr>";
+        echo "<td>{$vastus['nimi']}</td>";
+        echo "<td>{$vastus['isikukood']}</td>";
+        echo "<td>{$vastus['aeg']}</td>";
+        echo "<td>{$vastus['valik']}</td>";
+        echo "</tr>";
+    }
+}
+    ?>
     </table>
+<a id="XML" href="tootajad.xml">XML fail</a>
 </body>
 </html>

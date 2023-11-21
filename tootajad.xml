@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<date>
+<too>
   <date>
-    <aeg>17:26<tootaja><nimi>cxv</nimi><isikukood>32344</isikukood></tootaja><valik>lõpp</valik></aeg>
+    <aeg>17:26
+      <tootaja><nimi>test</nimi><isikukood>12345</isikukood></tootaja>
+      <valik>lõpp</valik>
+    </aeg>
   </date>
-</date>
+  
+</too>
